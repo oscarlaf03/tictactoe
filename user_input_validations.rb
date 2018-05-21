@@ -1,5 +1,4 @@
 # GET VALID USER INPUTS DATA
-
 def valid_user_level_input?(input)
   (1..3).include?(input.to_i)
 end
