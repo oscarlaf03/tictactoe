@@ -1,22 +1,22 @@
-require_relative 'index'
+require_relative 'user_input_validations'
+
 class Game
   def initialize
     @board = ["0", "1", "2", "3", "4", "5", "6", "7", "8"]
     set_markers
     @difficulty_level = set_difficulty_level
     @machine_vs_machine = set_game_type
-
   end
 
   #   START GAME
   def start_game
     # start by printing the board
-    puts "\nChoose and empty box from [0-8]:\n\n"
+    puts "\nChoose and empty box from [0-8]:\n"
     print_board
     # loop through until the game was won or tied
     until game_over?
       player1_move
-      player2_move
+      player2_move unless game_over?
       print_board
     end
     puts "It's a tie" if tie?
@@ -29,19 +29,20 @@ class Game
   #GAME INPUTS
   def player1_move
     if @machine_vs_machine
-      @board[next_move] = @player1
+      @board[next_move(@player1)] = @player1
     else
       @board[get_valid_user_box_input(gets.chomp).to_i] = @player1
     end
   end
 
   def player2_move
-    @board[next_move] = @player2
+    @board[next_move(@player2)] = @player2
   end
 
   #GAME SERVICES
   def set_markers
-    puts "Chose a Marker for player 1 'X' OR 'O'"
+    puts 'Welcome Player1'
+    puts "Please choose your marker: 'X' OR 'O'"
     @player1 = get_valid_maker(gets.chomp).upcase
     @player1 == 'X'? @player2 = 'O' : @player2 = 'X'
   end
@@ -56,13 +57,12 @@ class Game
     puts "Type '1' for Lazy"
     puts "Type '2' for Normal"
     puts "Type '3' for Grandmaster"
-    level = get_valid_user_level_input(gets.chomp).to_i
+    get_valid_user_level_input(gets.chomp).to_i
   end
 
   def set_game_type
     puts "Allow the machine to play for you?\n 'Y' or 'N'"
-    answer = get_valid_game_type(gets.chomp).upcase
-    answer == 'Y' ? true : false
+    get_valid_game_type(gets.chomp).upcase == 'Y' ? true : false
   end
 
   # READING THE CURRENT BOARD
@@ -83,9 +83,10 @@ class Game
     4
   end
 
-  def find_winning_move
+  def find_winning_move(player)
+    play = player == @player1 ? @player1 : @player2
     available_spaces.each do |as|
-      @board[as.to_i] = @player2
+      @board[as.to_i] = play
       if winner?
         @board[as.to_i] = as
         return  as.to_i
@@ -96,9 +97,10 @@ class Game
     false
   end
 
-  def block_oponent
+  def block_oponent(player)
+    bloc = player == @player1 ? @player2 : @player1
     available_spaces.each do |as|
-      @board[as.to_i] = @player1
+      @board[as.to_i] = bloc
       if winner?
         @board[as.to_i] = as
         return as.to_i
@@ -114,23 +116,23 @@ class Game
   end
 
   # GAME STRATEGIES
-  def win_block_random
+  def win_block_random(player)
     if center_free?
       draw_center
-    elsif find_winning_move
-      find_winning_move
-    elsif block_oponent
-      block_oponent
+    elsif find_winning_move(player)
+      find_winning_move(player)
+    elsif block_oponent(player)
+      block_oponent(player)
     else
       random_move
     end
   end
 
-  def block_win_random
-    if block_oponent
-      block_oponent
-    elsif find_winning_move
-      find_winning_move
+  def block_win_random(player)
+    if block_oponent(player)
+      block_oponent(player)
+    elsif find_winning_move(player)
+      find_winning_move(player)
     else
       random_move
     end
@@ -141,14 +143,11 @@ class Game
   end
 
   # SETTING GAME STRATEGY ACCORDING TO DIFFICULTY LEVEL
-  def next_move
+  def next_move(player)
     case @difficulty_level
-    when 1
-      random_only
-    when 2
-      block_win_random
-    when 3
-      win_block_random
+    when 1 then random_only
+    when 2 then block_win_random(player)
+    when 3 then win_block_random(player)
     end
   end
 
