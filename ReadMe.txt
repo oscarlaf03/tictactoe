@@ -1,3 +1,6 @@
+## Start with
+$ ruby run_game.rb
+
 Code improvements:
   -Refactored code
   -Split game functions into separate Parent classes with private methods for security
